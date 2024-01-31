@@ -41,6 +41,8 @@ $ touch config.json
 
 $ touch main.py
 from aqara_api import AqaraClient
+...
+...
 client = AqaraClient(api_key='iloveiot!')
 payload = {
     'appid': APPID ,
