@@ -14,7 +14,7 @@ API Mainnet Config and API keys
 ```shell
 
 
-1. Aqara API서버
+1. Aqara API
 
 China = 'https://open-cn.aqara.com'   // or
 Korea = 'https://open-kr.aqara.com'   // or
