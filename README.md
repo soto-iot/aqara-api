@@ -62,6 +62,6 @@ Step by step
 The most basic and easy way to run a Python script is by using the python command. You need to open a command line and type the word python followed by the path to your script file like this:
 
 ```python
-$ python app.py
+$ python main.py
 ```
 
