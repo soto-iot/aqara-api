@@ -53,6 +53,11 @@ payload = {
 }
 response_data = client.get_auth(payload)
 
+```
+
+### Step by step
+
+```shell
 Step by step
 1 Get Auth (get_auth)
 2 Get Token (get_token)
