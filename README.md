@@ -34,6 +34,11 @@ $ touch config.json
     "buildNumber": "55555"
 }
 
+```
+### main.py
+
+```shell
+
 $ touch main.py
 from aqara_api import AqaraClient
 client = AqaraClient(api_key='iloveiot!')
