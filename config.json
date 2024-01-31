@@ -1,0 +1,10 @@
+{
+    "mainnet": "https://open-kr.aqara.com",
+    "appid": "11111111111111",
+    "appkey": "222222222222",
+    "keyid": "333333333333333",
+    "email": "aaaa@aaaa.com" ,
+    "machineName": "aaaa",
+    "version": "55555",
+    "buildNumber": "55555"
+}
