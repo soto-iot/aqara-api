@@ -1,3 +1,14 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+@Author: Soto
+@Date: 2023/05/12
+@Version: 20230512
+@API Document URL : https://opendoc.aqara.cn/en/
+
+"""
+
 from datetime import datetime
 import logging
 import os
