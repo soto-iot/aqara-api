@@ -7,7 +7,7 @@ The Aqara developer platform provides HTTP APIs for remote calls by third-party 
 Through the API interface, query device information, control device, linkage configuration, etc.
 For details, please refer to [API Introduction](https://opendoc.aqara.com/en/docs/developmanual/apiIntroduction.html) and [API List](https://opendoc.aqara.com/en/docs/developmanual/apiDocument.html)
 
-### Config.json
+### config.json
 
 API Mainnet Config and API keys
 
