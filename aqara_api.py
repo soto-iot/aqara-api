@@ -418,7 +418,7 @@ class AqaraClient:
 
             did = payload.get('did')
             resid = payload.get('resid')
-            value = payload.get('control')
+            value = payload.get('value')
             accessToken = payload.get('token')
 
             headers = self.get_headers(accessToken)
