@@ -4,6 +4,7 @@ import os
 from aqara_api import AqaraClient
 import traceback
 import json
+import time
 
 # 로그 파일을 저장할 디렉토리 경로를 설정합니다.
 log_dir = 'logs'
@@ -42,8 +43,64 @@ with open('config.json', encoding="utf-8") as jsonFile:
     email = jsonData["email"]
 
 client = AqaraClient(apikey='iloveiot!', appid=appid, appkey=appkey, keyid=keyid , email=email)
-payload = {
-    'email': email ,
-    'virtual': False
+
+# writeDev('lumi.54ef44100018ae99', '4.1.85', '1', '41502c679c652ef070f140e80695369e' ) 
+did = 'lumi.54ef44100018ae99'
+resid = '4.1.85'
+value = '1'
+token = '41502c679c652ef070f140e80695369e'
+
+# Left Button On POST 요청
+payload = { 
+    'did': did ,  
+    'resid': resid ,  
+    'control': value ,  
+    'token': token
 }
-response_data = client.get_auth(payload)
+
+response_msg = client.write_resource(payload)
+
+time.sleep(3)  # 3초 동안 지연
+
+value = '0'
+
+# Left Button Off POST 요청
+payload = { 
+    'did': did ,  
+    'resid': resid ,   
+    'control': value ,  
+    'token': token
+}
+
+response_msg = client.write_resource(payload)
+
+time.sleep(3)  # 3초 동안 지연
+
+did = 'lumi.54ef44100018ae99'
+resid = '4.2.85'
+value = '1'
+token = '41502c679c652ef070f140e80695369e'
+
+# Right Button On POST 요청
+payload = { 
+    'did': did ,  
+    'resid': resid ,  
+    'control': value ,  
+    'token': token
+}
+
+response_msg = client.write_resource(payload)
+
+time.sleep(3)  # 3초 동안 지연
+
+value = '0'
+
+# Right Button Off POST 요청
+payload = { 
+    'did': did ,  
+    'resid': resid ,   
+    'control': value ,  
+    'token': token
+}
+
+response_msg = client.write_resource(payload)

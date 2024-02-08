@@ -36,6 +36,7 @@ $ touch config.json
 }
 
 $ touch main.py
+from aqara_api import AqaraClient
 client = AqaraClient(api_key='iloveiot!')
 payload = {
     'appid': APPID ,
@@ -71,53 +72,53 @@ TOKENURL = MAINNET + '/v3.0/open/access_token'
 AUTHURL = MAINNET + '/v3.0/open/authorize'
 
 class AqaraClient:
-    def __init__(self, api_key):
-        self.api_key = api_key
-        self.api_id = ''
-        self.api_key = ''
-        self.key_id = ''
+    def __init__(self, apikey, appid, appkey, keyid, email):
+        self.api_key = apikey
+        self.api_id = appid
+        self.api_key = appkey
+        self.key_id = keyid
+        self.email = email
     
-    def get_headers(self, accessToken, appid, appkey , keyid):
+    def get_headers(self, accessToken):
         try:        
-            logging.info('[get_headers] appid : ' + str(appid))
-            logging.info('[get_headers] appkey : ' + str(appkey))
-            logging.info('[get_headers] keyid : ' + str(keyid))
+            logging.info('[get_headers] appId : ' + str(self.api_id))
+            logging.info('[get_headers] appKey : ' + str(self.api_key))
+            logging.info('[get_headers] keyId : ' + str(self.key_id))
+       
+            currentUTC = round(time.time(), 3)
+            Time = str(int(currentUTC * 1000))
+            Nonce = str(int(currentUTC * 1000))
 
-            currentUTC = str(round(time.time(), 3))
-            Appid = appid
-            Keyid = keyid
-            AppKey = appkey
-            Time = currentUTC.replace('.', '')
-            Nonce = currentUTC.replace('.', '')
+            logging.info('[get_headers] currentUTC : ' + str(currentUTC))
 
             headers = ''
             
             if accessToken == 'No':
                 accessToken = ''
-                preSign = 'Appid=' + Appid + '&' + 'Keyid=' + Keyid + '&' + 'Nonce=' + Nonce + '&' + 'Time=' + Time + AppKey
+                preSign = 'Appid=' + self.api_id + '&' + 'Keyid=' + self.key_id + '&' + 'Nonce=' + Nonce + '&' + 'Time=' + Time + self.api_key
 
                 preSign = preSign.lower()
                 Sign = str(hashlib.md5(preSign.encode()).hexdigest())
 
                 headers = {
                     'Content-Type' : 'application/json',
-                    'Appid': Appid,
-                    'Keyid': Keyid,
+                    'Appid': self.api_id,
+                    'Keyid': self.key_id,
                     'Nonce': Nonce,
                     'Time': Time,
                     'Sign': Sign
                     # 'Lang': 'ko'
                 }
             else:
-                preSign = 'Accesstoken=' + accessToken + '&' + 'Appid=' + Appid + '&' + 'Keyid=' + Keyid + '&' + 'Nonce=' + Nonce + '&' + 'Time=' + Time + AppKey
+                preSign = 'Accesstoken=' + accessToken + '&' + 'Appid=' + self.api_id + '&' + 'Keyid=' + self.key_id + '&' + 'Nonce=' + Nonce + '&' + 'Time=' + Time + self.api_key
                 preSign = preSign.lower()
                 Sign = str(hashlib.md5(preSign.encode()).hexdigest())
 
                 headers = {
                     'Content-Type' : 'application/json',
                     'Accesstoken': accessToken,
-                    'Appid': Appid,
-                    'Keyid': Keyid,
+                    'Appid': self.api_id,
+                    'Keyid': self.key_id,
                     'Nonce': Nonce,
                     'Time': Time,
                     'Sign': Sign
@@ -135,17 +136,12 @@ class AqaraClient:
 
     def virtual_account(self, payload):
 
-        appid = payload.get('appid')
-        appkey = payload.get('appkey')
-        keyid = payload.get('keyid')
-        email = payload.get('email')
-
-        logging.info('[virtual_account] Payload email : ' + str(email))
-        logging.info('[virtual_account] Payload appid : ' + str(appid))
+        logging.info('[virtual_account] Payload email : ' + str(self.email))
+        logging.info('[virtual_account] Payload appId : ' + str(self.api_id))
 
         accessToken = 'No'
 
-        headers = self.get_headers(accessToken, appid, appkey , keyid)
+        headers = self.get_headers(accessToken, self.api_id, self.api_key, self.key_id)
 
         payload = {
             'intent': 'config.auth.createAccount',
@@ -173,15 +169,58 @@ class AqaraClient:
             logging.info('[virtual_account] traceback : ' + str(traceback.format_exc()))
             return None
 
+    
+    '''
+    virtual_account_auto
+    needAccessToken:
+      true: need to return accessToken; false: do not need to return accessToken
+    accessTokenValidity:
+      Access token valid time
+    '''
+
+
+    def virtual_account_auto(self, payload):
+
+        logging.info('[virtual_account] Payload email : ' + str(self.email))
+        logging.info('[virtual_account] Payload appid : ' + str(self.api_id))
+
+        accessToken = 'No'
+
+        headers = self.get_headers(accessToken, self.api_id, self.api_key, self.key_id )
+
+        payload = {
+            'intent': 'config.auth.createAccount',
+            'data': {
+                'accountId': self.email ,
+                "remark": "lumi-1"  ,
+                "needAccessToken" : True, 
+                "accessTokenValidity" : "1y"
+            }
+        }
+
+        payload = json.dumps(payload) 
+
+        try:
+            openId = ''            
+            response = requests.post(APIURL, headers=headers, data=payload)         
+            response = json.loads(response.text)
+            logging.info('[virtual_account] response : ' + str(response))
+            result = response['message']
+
+            if result == 'Success' :
+                openId = response['result']['openId']
+
+            return openId, response
+
+        except Exception as error:
+            logging.info('[virtual_account] traceback : ' + str(traceback.format_exc()))
+            return None
+
     def get_authorize_code(self, payload):
 
-        appid = payload.get('appid')
-        appkey = payload.get('appkey')
-        keyid = payload.get('keyid')
-        email = payload.get('email')
         virtual = payload.get('virtual')
 
-        logging.info('[get_authorize_code] Payload appid : ' + str(appid))
+        logging.info('[get_authorize_code] Payload appid : ' + str(self.api_id))
         logging.info('[get_authorize_code] Payload virtual : ' + str(virtual))
 
         accessToken = 'No'
@@ -193,12 +232,12 @@ class AqaraClient:
             logging.info('[get_authorize_code] response openId : ' + str(openId))
             logging.info('[get_authorize_code] response : ' + str(response))
 
-        headers = self.get_headers(accessToken, appid, appkey , keyid)
+        headers = self.get_headers(accessToken)
 
         payload = {
             'intent': 'config.auth.getAuthCode',
             'data': {
-                'account': email ,
+                'account': self.email ,
                 'accountType': account_type ,
                 'accessTokenValidity': '1y'
             }
@@ -222,10 +261,6 @@ class AqaraClient:
 
         logging.info('[get_access_token] Payload : ' + str(payload))
         
-        appid = payload.get('appid')
-        appkey = payload.get('appkey')
-        keyid = payload.get('keyid')
-        email = payload.get('email')
         authCode = payload.get('authCode')
         virtual = payload.get('virtual')
 
@@ -235,12 +270,12 @@ class AqaraClient:
         if virtual :
             account_type = 2
 
-        headers = self.get_headers(accessToken, appid, appkey , keyid)
+        headers = self.get_headers(accessToken)
         payload = {
             "intent": "config.auth.getToken",
             "data": {
-                "authCode": authCode,
-                "account": email,
+                "authCode": authCode ,
+                "account": self.email ,
                 "accountType": account_type
             }
         }
@@ -265,15 +300,12 @@ class AqaraClient:
         logging.info('[get_position_info] Payload : ' + str(payload))
         
         accessToken = payload.get('token')
-        appid = payload.get('appid')
-        appkey = payload.get('appkey')
-        keyid = payload.get('keyid')
 
         response = ''
         all_position_value = []
         all_device_list = []        
 
-        headers = self.get_headers(accessToken, appid, appkey , keyid)
+        headers = self.get_headers(accessToken)
         tempPayload = {
             "intent": "query.position.info",
             "data": {
@@ -318,13 +350,10 @@ class AqaraClient:
         try:
             logging.info('[aiot_device_list] Payload : ' + str(payload))
             accessToken = payload.get('token')
-            appid = payload.get('appid')
-            appkey = payload.get('appkey')
-            keyid = payload.get('keyid')
 
             all_dev_list_value = []
 
-            headers = self.get_headers(accessToken, appid, appkey , keyid)
+            headers = self.get_headers(accessToken)
 
             tempPayload = {
                 "intent": "query.device.info",
@@ -358,13 +387,10 @@ class AqaraClient:
             logging.info('[query_resource_info] Payload : ' + str(payload))
             model = payload.get('model')
             accessToken = payload.get('token')
-            appid = payload.get('appid')
-            appkey = payload.get('appkey')
-            keyid = payload.get('keyid')
 
             model_info_value = []            
 
-            headers = self.get_headers(accessToken, appid, appkey , keyid)
+            headers = self.get_headers(accessToken)
 
             tempPayload = {
                 "intent": "query.resource.info",
@@ -393,17 +419,13 @@ class AqaraClient:
     def write_resource_device(self, payload):        
         try:
             logging.info('[write_resource_device] Payload : ' + str(payload))
-            appid = payload.get('appid')
-            appkey = payload.get('appkey')
-            keyid = payload.get('keyid')
+
             did = payload.get('did')
             resid = payload.get('resid')
-            control = payload.get('control')
+            value = payload.get('control')
             accessToken = payload.get('token')
-            
-            value = 1 if control == 'on' else 0
 
-            headers = self.get_headers(accessToken, appid, appkey , keyid)
+            headers = self.get_headers(accessToken)
          
             tempPayload = {
                 "intent": "write.resource.device",
@@ -413,7 +435,7 @@ class AqaraClient:
                         "resources": [
                             {
                             "resourceId": resid ,
-                            "value": value
+                            "value": int(value)
                             }
                         ]
                     }
@@ -434,16 +456,14 @@ class AqaraClient:
     def query_resource_value(self, payload):
         try:
             logging.info('[query_resource_value] Payload : ' + str(payload))
-            appid = payload.get('appid')
-            appkey = payload.get('appkey')
-            keyid = payload.get('keyid')
+
             did = payload.get('did')
             resid = payload.get('resid')
             accessToken = payload.get('token')
             
             resid = [s.strip() for s in resid.split(",")]
 
-            headers = self.get_headers(accessToken, appid, appkey , keyid)
+            headers = self.get_headers(accessToken)
          
             tempPayload = {
                 "intent": "query.resource.value",
@@ -474,18 +494,15 @@ class AqaraClient:
     def fetch_resource_history(self, payload):
         try:
             logging.info('[fetch_resource_history] Payload : ' + str(payload))
-            print("[fetch_resource_history].. ")
-            appid = payload.get('appid')
-            appkey = payload.get('appkey')
-            keyid = payload.get('keyid')
+
             did = payload.get('did')
             resid = payload.get('resid')
             accessToken = payload.get('token')
 
-            headers = self.get_headers(accessToken, appid, appkey , keyid)
+            headers = self.get_headers(accessToken)
          
-            currentUTC = str(round(time.time(),3) - 86400 * 30 )  # 86400 = 24H : 60s * 60m * 24h
-            tTime = currentUTC.replace('.','')
+            currentUTC = round(time.time(),3) - 86400 * 30  # 86400 = 24H : 60s * 60m * 24h
+            tTime = str(int(currentUTC * 1000))
 
             tempPayload = {
                 "intent": "fetch.resource.history",
@@ -513,10 +530,6 @@ class AqaraClient:
     """
     @get_auth
     payload = {
-        'appid': APPID ,
-        'appkey': APPKEY , 
-        'keyid': KEYID ,
-        'email': email ,
         'virtual': virtual
     }
     """
@@ -533,11 +546,7 @@ class AqaraClient:
     """
     @get_token
     payload = {
-        'authCode': authCode,
-        'appid': APPID,
-        'appkey': APPKEY, 
-        'keyid': KEYID,
-        'email': email,
+        'authCode': authCode
         'virtual': virtual
     }
     """        
@@ -555,10 +564,7 @@ class AqaraClient:
     """
     @get_position
     payload = {
-        'token': token,
-        'appid': APPID,
-        'appkey': APPKEY, 
-        'keyid': KEYID
+        'token': token
     }
     """  
     def get_position(self, payload):        
@@ -576,10 +582,7 @@ class AqaraClient:
     @get_resource
     payload = {
         'model': model,
-        'token': token,
-        'appid': APPID,
-        'appkey': APPKEY, 
-        'keyid': KEYID 
+        'token': token
     }
     """ 
     def get_resource(self, payload):
@@ -596,9 +599,6 @@ class AqaraClient:
     """
     @write_resource
     payload = {
-        'appid': APPID,
-        'appkey': APPKEY, 
-        'keyid': KEYID,
         'did': did,  
         'resid': resid,  
         'control': control,  
@@ -619,9 +619,6 @@ class AqaraClient:
     """
     @read_resource
     payload = {
-        'appid': APPID,
-        'appkey': APPKEY, 
-        'keyid': KEYID,
         'did': did,  
         'resid': resid,  
         'token': token
@@ -641,9 +638,6 @@ class AqaraClient:
     """
     @get_history
     payload = { 
-        'appid': APPID,
-        'appkey': APPKEY, 
-        'keyid': KEYID,
         'did': did,   
         'resid': resid,   
         'token': token
