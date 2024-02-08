@@ -44,11 +44,11 @@ with open('config.json', encoding="utf-8") as jsonFile:
 
 client = AqaraClient(apikey='iloveiot!', appid=appid, appkey=appkey, keyid=keyid , email=email)
 
-# writeDev('lumi.54ef4410009b3dc3', '4.1.85', '1', '41502c679c652ef070f140e80695369e' ) 
+# writeDev('lumi.54ef441', '4.1.85', '1', '52ef070f140e80695369e' ) 
 did = 'lumi.54ef4410009b3dc3'
 resid = '4.1.85'
 value = '1'
-token = '41502c679c652ef070f140e80695369e'
+token = '52ef070f140e80695369e'
 
 # Plug On POST 요청
 payload = { 
