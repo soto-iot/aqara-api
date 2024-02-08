@@ -39,11 +39,7 @@ $ touch main.py
 from aqara_api import AqaraClient
 client = AqaraClient(api_key='iloveiot!')
 payload = {
-    'appid': APPID ,
-    'appkey': APPKEY , 
-    'keyid': KEYID ,
-    'email': email ,
-    'virtual': virtual
+    'virtual': False
 }
 response_data = client.get_auth(payload)
 
