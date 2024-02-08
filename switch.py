@@ -44,11 +44,11 @@ with open('config.json', encoding="utf-8") as jsonFile:
 
 client = AqaraClient(apikey='iloveiot!', appid=appid, appkey=appkey, keyid=keyid , email=email)
 
-# writeDev('lumi.54ef44100018ae99', '4.1.85', '1', '41502c679c652ef070f140e80695369e' ) 
-did = 'lumi.54ef44100018ae99'
+# writeDev('lumi.54ef44', '4.1.85', '1', '52ef070f140e80695369e' ) 
+did = 'lumi.54ef44'
 resid = '4.1.85'
 value = '1'
-token = '41502c679c652ef070f140e80695369e'
+token = '52ef070f140e80695369e'
 
 # Left Button On POST 요청
 payload = { 
@@ -76,10 +76,10 @@ response_msg = client.write_resource(payload)
 
 time.sleep(3)  # 3초 동안 지연
 
-did = 'lumi.54ef44100018ae99'
+did = 'lumi.54ef44'
 resid = '4.2.85'
 value = '1'
-token = '41502c679c652ef070f140e80695369e'
+token = '52ef070f140e80695369e'
 
 # Right Button On POST 요청
 payload = { 
