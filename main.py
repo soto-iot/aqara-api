@@ -5,28 +5,8 @@ from aqara_api import AqaraClient
 import traceback
 import json
 
-# 로그 파일을 저장할 디렉토리 경로를 설정합니다.
-log_dir = 'logs'
-
-# 로그 디렉토리가 존재하지 않으면 생성합니다.
-if not os.path.exists(log_dir):
-    os.makedirs(log_dir)
-
-# 현재 날짜를 기반으로 로그 파일명을 생성합니다.
-log_filename = f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.log"
-
-# 로그 파일의 전체 경로를 생성합니다.
-log_file_path = os.path.join(log_dir, log_filename)
-
-# 로깅 설정을 구성합니다.
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s [%(levelname)s]: %(message)s',
-    handlers=[
-        logging.FileHandler(log_file_path),
-        logging.StreamHandler()
-    ]
-)
+from logs import Logs
+logger = Logs(apikey='iloveapi!')
 
 appid = ''
 appkey = ''
@@ -42,8 +22,130 @@ with open('config.json', encoding="utf-8") as jsonFile:
     email = jsonData["email"]
 
 client = AqaraClient(apikey='iloveiot!', appid=appid, appkey=appkey, keyid=keyid , email=email)
-payload = {
-    'email': email ,
-    'virtual': False
-}
-response_data = client.get_auth(payload)
+
+# 1 Get Auth (get_auth)
+def get_auth():
+    print('=== 1 Get Auth (get_auth)')
+    payload = {
+        'virtual': False
+    }
+
+    response_data = client.get_auth(payload)
+    authCode = input(f'{email} 이메일을 확인하여 authCode 입력하세요: ')
+    return authCode
+
+# 2 Get Token (get_token)
+def get_token(authCode):
+    print('=== 2 Get Token (get_token)')
+    payload = {
+        'virtual': False ,
+        'authCode': authCode    
+    }
+
+    accessToken, response = client.get_token(payload)
+
+    logger.info('[get_token] accessToken : ' + str(accessToken))
+    logger.info('[get_token] response : ' + str(response))
+    return accessToken, response
+
+# 3 Get List (get_position)
+def get_position(accessToken):
+    print('=== 3 Get List (get_position)')
+    payload = {
+        'token': accessToken
+    }
+
+    all_position_value, response, all_device_list = client.get_position(payload)
+
+    logger.info('[get_position] all_position_value : ' + str(all_position_value))
+    logger.info('[get_position] response : ' + str(response))
+    return response
+
+# 4 Get Attributes (get_resource)
+def get_resource(accessToken):    
+    print('=== 4 Get Attributes (get_resource)')
+    model = input('model 확인하여 입력하세요: ')
+
+    payload = {
+        'model' : model ,
+        'token': accessToken
+    }
+
+    model_info_value , response = client.get_resource(payload)
+
+    logger.info('[get_resource] model_info_value : ' + str(model_info_value))
+    logger.info('[get_resource] response : ' + str(response))
+    return response
+
+# 5 Write (write_resource)
+def write_resource(accessToken):
+    print('=== 5 Write (write_resource)')
+    did = input('did 확인하여 입력하세요: ')
+    resid = input('resid 확인하여 입력하세요: ')
+    value = input('value 확인하여 입력하세요: ')
+
+    payload = {
+        'did' : did ,
+        'resid' : resid ,
+        'value' : value ,
+        'token': accessToken
+    }
+
+    response = client.write_resource(payload)
+    logger.info('[write_resource] response : ' + str(response))
+    return response
+
+
+# 6 Read (read_resource)
+def read_resource(accessToken):
+    print('=== 6 Read (read_resource)')
+    did = input('did 확인하여 입력하세요: ')
+    resid = input('resid 확인하여 입력하세요: ')
+
+    payload = {
+        'did' : did ,
+        'resid' : resid ,
+        'token': accessToken
+    }
+
+    response = client.read_resource(payload)
+    logger.info('[read_resource] response : ' + str(response))
+    return response
+
+# 7 Get History (get_history)
+def get_history(accessToken):
+    print('=== 7 Get History (get_history)')
+    did = input('did 확인하여 입력하세요: ')
+    resid = input('resid 확인하여 입력하세요: ')
+
+    payload = {
+        'did' : did ,
+        'resid' : resid ,
+        'token': accessToken
+    }
+
+    response = client.get_history(payload)
+    logger.info('[get_history] response : ' + str(response))
+    return response
+
+def main():
+    '''
+    Step by step
+    1 Get Auth (get_auth)
+    2 Get Token (get_token)
+    3 Get List (get_position)
+    4 Get Attributes (get_resource)
+    5 Write (write_resource)
+    6 Read (read_resource)
+    7 Get History (get_history)
+    '''
+    authCode = get_auth()
+    accessToken, response = get_token(authCode)
+    response = get_position(accessToken)
+    response = get_resource(accessToken)
+    response = write_resource(accessToken)
+    response = read_resource(accessToken)
+    response = get_history(accessToken)
+
+if __name__ == '__main__':
+    main()    
