@@ -17,7 +17,6 @@ import logging
 import traceback
 import pprint
 import os
-from datetime import datetime
 
 MAINNET  = ''
 
@@ -68,22 +67,22 @@ TOKENURL = MAINNET + '/v3.0/open/access_token'
 AUTHURL = MAINNET + '/v3.0/open/authorize'
 
 class AqaraClient:
-    def __init__(self, apikey, appid, appkey, keyid, email):
-        self.api_key = apikey
-        self.api_id = appid
-        self.api_key = appkey
-        self.key_id = keyid
+    def __init__(self, appkey, appid, appkey, keyid, email):
+        self.apiKey = apikey
+        self.appId = appid
+        self.appKey = appkey
+        self.keyId = keyid
         self.email = email
     
     def get_headers(self, accessToken):
         try:        
-            logging.info('[get_headers] appId : ' + str(self.api_id))
-            logging.info('[get_headers] appKey : ' + str(self.api_key))
-            logging.info('[get_headers] keyId : ' + str(self.key_id))
+            logging.info('[get_headers] appId : ' + str(self.appId))
+            logging.info('[get_headers] appKey : ' + str(self.appKey))
+            logging.info('[get_headers] keyId : ' + str(self.keyId))
        
             currentUTC = round(time.time(), 3)
-            Time = str(int(currentUTC * 1000))
-            Nonce = str(int(currentUTC * 1000))
+            timeNow = str(int(currentUTC * 1000))
+            nonce = str(int(currentUTC * 1000))
 
             logging.info('[get_headers] currentUTC : ' + str(currentUTC))
 
@@ -91,33 +90,34 @@ class AqaraClient:
             
             if accessToken == 'No':
                 accessToken = ''
-                preSign = 'Appid=' + self.api_id + '&' + 'Keyid=' + self.key_id + '&' + 'Nonce=' + Nonce + '&' + 'Time=' + Time + self.api_key
+                preSign = f'Appid={self.appId}&Keyid={self.keyId}&Nonce={self.nonce}&Time={timeNow}{self.appKey}'
 
                 preSign = preSign.lower()
-                Sign = str(hashlib.md5(preSign.encode()).hexdigest())
+                sign = str(hashlib.md5(preSign.encode()).hexdigest())
 
                 headers = {
                     'Content-Type' : 'application/json',
-                    'Appid': self.api_id,
-                    'Keyid': self.key_id,
-                    'Nonce': Nonce,
-                    'Time': Time,
-                    'Sign': Sign
+                    'Appid': self.appId,
+                    'Keyid': self.keyId,
+                    'Nonce': nonce,
+                    'Time': timeNow,
+                    'Sign': sign
                     # 'Lang': 'ko'
                 }
             else:
-                preSign = 'Accesstoken=' + accessToken + '&' + 'Appid=' + self.api_id + '&' + 'Keyid=' + self.key_id + '&' + 'Nonce=' + Nonce + '&' + 'Time=' + Time + self.api_key
+                
+                preSign = f'Accesstoken={accessToken}&Appid={self.appId}&Keyid={self.keyId}&Nonce={self.nonce}&Time={timeNow}{self.appKey}'
                 preSign = preSign.lower()
-                Sign = str(hashlib.md5(preSign.encode()).hexdigest())
+                sign = str(hashlib.md5(preSign.encode()).hexdigest())
 
                 headers = {
                     'Content-Type' : 'application/json',
                     'Accesstoken': accessToken,
-                    'Appid': self.api_id,
-                    'Keyid': self.key_id,
-                    'Nonce': Nonce,
-                    'Time': Time,
-                    'Sign': Sign
+                    'Appid': self.appId,
+                    'Keyid': self.keyId,
+                    'Nonce': nonce,
+                    'Time': timeNow,
+                    'Sign': sign
                     # 'Lang': 'ko'
                 }
 
@@ -133,11 +133,11 @@ class AqaraClient:
     def virtual_account(self, payload):
 
         logging.info('[virtual_account] Payload email : ' + str(self.email))
-        logging.info('[virtual_account] Payload appId : ' + str(self.api_id))
+        logging.info('[virtual_account] Payload appId : ' + str(self.appId))
 
         accessToken = 'No'
 
-        headers = self.get_headers(accessToken, self.api_id, self.api_key, self.key_id)
+        headers = self.get_headers(accessToken)
 
         payload = {
             'intent': 'config.auth.createAccount',
@@ -178,11 +178,11 @@ class AqaraClient:
     def virtual_account_auto(self, payload):
 
         logging.info('[virtual_account] Payload email : ' + str(self.email))
-        logging.info('[virtual_account] Payload appid : ' + str(self.api_id))
+        logging.info('[virtual_account] Payload appid : ' + str(self.appId))
 
         accessToken = 'No'
 
-        headers = self.get_headers(accessToken, self.api_id, self.api_key, self.key_id )
+        headers = self.get_headers(accessToken )
 
         payload = {
             'intent': 'config.auth.createAccount',
@@ -216,14 +216,14 @@ class AqaraClient:
 
         virtual = payload.get('virtual')
 
-        logging.info('[get_authorize_code] Payload appid : ' + str(self.api_id))
+        logging.info('[get_authorize_code] Payload appid : ' + str(self.appId))
         logging.info('[get_authorize_code] Payload virtual : ' + str(virtual))
 
         accessToken = 'No'
-        account_type = 0
+        accountType = 0
 
         if virtual :
-            account_type = 2
+            accountType = 2
             openId, response = self.virtual_account(payload)
             logging.info('[get_authorize_code] response openId : ' + str(openId))
             logging.info('[get_authorize_code] response : ' + str(response))
@@ -234,7 +234,7 @@ class AqaraClient:
             'intent': 'config.auth.getAuthCode',
             'data': {
                 'account': self.email ,
-                'accountType': account_type ,
+                'accountType': accountType ,
                 'accessTokenValidity': '1y'
             }
         }
@@ -261,10 +261,10 @@ class AqaraClient:
         virtual = payload.get('virtual')
 
         accessToken = 'No'
-        account_type = 0
+        accountType = 0
 
         if virtual :
-            account_type = 2
+            accountType = 2
 
         headers = self.get_headers(accessToken)
         payload = {
@@ -272,14 +272,15 @@ class AqaraClient:
             "data": {
                 "authCode": authCode ,
                 "account": self.email ,
-                "accountType": account_type
+                "accountType": accountType
             }
         }
 
         logging.info('[get_access_token] payload : ' + str(payload))
+        payload = json.dumps(payload) 
         
         try:
-            response = requests.post(APIURL, headers=headers, json=payload)
+            response = requests.post(APIURL, headers=headers, data=payload)
             response = json.loads(response.text)
             print('[get_access_token] response : ', response)
             accessToken = response['result']['accessToken']
@@ -298,60 +299,62 @@ class AqaraClient:
         accessToken = payload.get('token')
 
         response = ''
-        all_position_value = []
-        all_device_list = []        
+        allPositionValue = []
+        allDeviceList = []        
 
         headers = self.get_headers(accessToken)
-        tempPayload = {
+        payload = {
             "intent": "query.position.info",
             "data": {
                 "pageNum": 1,
                 "pageSize": 200
             }
         }
+
+        payload = json.dumps(payload) 
         
         try:
-            response = requests.post(APIURL, headers=headers, json=tempPayload)
+            response = requests.post(APIURL, headers=headers, data=payload)
 
             positionResponse = json.loads(response.text)
             logging.info("response : " + str(positionResponse))
             resultValue = positionResponse['result']['data']
-            logging.info("[get_position_info] all_device_list :  " + str(resultValue))
+            logging.info("[get_position_info] allDeviceList :  " + str(resultValue))
 
             for dataSet in resultValue:
                 logging.info("dataSet : " + str(dataSet))
                 temp = {'positionName': dataSet['positionName'], 'positionId': dataSet['positionId']}
-                all_position_value.append(temp)
+                allPositionValue.append(temp)
 
-            logging.info("positionId : " + str(all_position_value))
-            pprint.pprint(all_position_value)
+            logging.info("positionId : " + str(allPositionValue))
+            pprint.pprint(allPositionValue)
             # pprint.pprint(response)
 
-            if all_position_value :
+            if allPositionValue :
 
-                for dataSet in all_position_value:
+                for dataSet in allPositionValue:
                     responseList = self.aiot_device_list(dataSet['positionId'] , payload)
-                    all_device_list.append(responseList)
+                    allDeviceList.append(responseList)
 
-            logging.info("[get_position_info] all_device_list :  " + str(all_device_list))
-            return all_position_value, positionResponse, all_device_list
+            logging.info("[get_position_info] allDeviceList :  " + str(allDeviceList))
+            return allPositionValue, positionResponse, allDeviceList
         
         except Exception as error:
             logging.info('[get_position_info] traceback : ' + str(traceback.format_exc()))
-            access_token = ''
+            accessToken = ''
             response = ''
-            return access_token, response , ''
+            return accessToken, response , ''
     
     def aiot_device_list(self, positionId, payload):
         try:
             logging.info('[aiot_device_list] Payload : ' + str(payload))
             accessToken = payload.get('token')
 
-            all_dev_list_value = []
+            allDevListValue = []
 
             headers = self.get_headers(accessToken)
 
-            tempPayload = {
+            payload = {
                 "intent": "query.device.info",
                 "data": {
                     "positionId": positionId ,
@@ -360,7 +363,7 @@ class AqaraClient:
                 }
             }
 
-            payload = str(json.dumps(tempPayload))
+            payload = json.dumps(payload) 
             response = requests.post(APIURL, headers=headers, data=payload)
             response = json.loads(response.text)
             logging.info("response : " + str(response))
@@ -369,13 +372,13 @@ class AqaraClient:
             for dataSet in resultValue:
                 logging.info("dataSet : " + str(dataSet))
                 temp = {'deviceName': dataSet['deviceName'], 'state': dataSet['state'] , 'model': dataSet['model'] , 'did': dataSet['did'] }
-                all_dev_list_value.append(temp)
+                allDevListValue.append(temp)
 
-            return all_dev_list_value
+            return allDevListValue
         
         except Exception as error:
             logging.info('[aiot_device_list] traceback : ' + str(traceback.format_exc()))
-            return 'aiot_device_list'
+            return 'allDevListValue'
     
     def query_resource_info(self, payload):    
         response = ''    
@@ -384,18 +387,18 @@ class AqaraClient:
             model = payload.get('model')
             accessToken = payload.get('token')
 
-            model_info_value = []            
+            modelInfoValue = []            
 
             headers = self.get_headers(accessToken)
 
-            tempPayload = {
+            payload = {
                 "intent": "query.resource.info",
                 "data": {
                     "model": model 
                 }
             }
 
-            payload = str(json.dumps(tempPayload))
+            payload = json.dumps(payload) 
             response = requests.post(APIURL, headers=headers, data=payload)
             response = json.loads(response.text)
             logging.info("response : " + str(response))
@@ -404,9 +407,9 @@ class AqaraClient:
             for dataSet in resultValue:
                 logging.info("dataSet : " + str(dataSet))
                 temp = {'name': dataSet['name'], 'resourceId': dataSet['resourceId'] , 'access': dataSet['access'] , 'description': dataSet['description'] }
-                model_info_value.append(temp)
+                modelInfoValue.append(temp)
 
-            return model_info_value , response
+            return modelInfoValue , response
         
         except Exception as error:
             logging.info('[query_resource_info] traceback : ' + str(traceback.format_exc()))
@@ -423,7 +426,7 @@ class AqaraClient:
 
             headers = self.get_headers(accessToken)
          
-            tempPayload = {
+            payload = {
                 "intent": "write.resource.device",
                 "data": [
                     {
@@ -438,7 +441,7 @@ class AqaraClient:
                 ]
             }
 
-            payload = str(json.dumps(tempPayload))
+            payload = json.dumps(payload) 
             response = requests.post(APIURL, headers=headers, data=payload)
             response = json.loads(response.text)
             logging.info("response : " + str(response))
@@ -461,7 +464,7 @@ class AqaraClient:
 
             headers = self.get_headers(accessToken)
          
-            tempPayload = {
+            payload = {
                 "intent": "query.resource.value",
                 "data": {
                     "resources": [ 
@@ -474,9 +477,9 @@ class AqaraClient:
                 }
             }
 
-            logging.info("[query_resource_value] tempPayload : " + str(tempPayload))
+            logging.info("[query_resource_value] payload : " + str(payload))
 
-            payload = str(json.dumps(tempPayload))
+            payload = json.dumps(payload) 
             response = requests.post(APIURL, headers=headers, data=payload)
             response = json.loads(response.text)
             logging.info("response : " + str(response))
@@ -500,7 +503,7 @@ class AqaraClient:
             currentUTC = round(time.time(),3) - 86400 * 30  # 86400 = 24H : 60s * 60m * 24h
             tTime = str(int(currentUTC * 1000))
 
-            tempPayload = {
+            payload = {
                 "intent": "fetch.resource.history",
                 "data": {
                     "subjectId": did ,
@@ -511,7 +514,7 @@ class AqaraClient:
                 }                
             }
 
-            payload = str(json.dumps(tempPayload))
+            payload = json.dumps(payload) 
             response = requests.post(APIURL, headers=headers, data=payload)
             response = json.loads(response.text)
             logging.info("response : " + str(response))
@@ -566,9 +569,9 @@ class AqaraClient:
     def get_position(self, payload):        
         try:
             logging.info('[get_position] Payload : ' + str(payload))
-            all_position_value, positionResponse, all_device_list = self.get_position_info(payload)
+            allPositionValue, positionResponse, allDeviceList = self.get_position_info(payload)
 
-            return all_position_value, positionResponse, all_device_list 
+            return allPositionValue, positionResponse, allDeviceList 
         
         except Exception as error:
             logging.info('[get_position] traceback : ' + str(traceback.format_exc()))
@@ -584,9 +587,9 @@ class AqaraClient:
     def get_resource(self, payload):
         try:
             logging.info('[get_resource] Payload : ' + str(payload))
-            device_resource_value, resourceResponse = self.query_resource_info(payload)
+            deviceResourceValue, resourceResponse = self.query_resource_info(payload)
 
-            return device_resource_value, resourceResponse 
+            return deviceResourceValue, resourceResponse 
         
         except Exception as error:
             logging.info('[get_resource] traceback : ' + str(traceback.format_exc()))
