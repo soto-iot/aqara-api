@@ -47,7 +47,7 @@ client = AqaraClient(api_key='iloveiot!')
 payload = {
     'virtual': False
 }
-response_data = client.get_auth(payload)
+response = client.get_auth(payload)
 
 ```
 
