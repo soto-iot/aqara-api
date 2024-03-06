@@ -30,7 +30,7 @@ def get_auth():
         'virtual': False
     }
 
-    response_data = client.get_auth(payload)
+    response = client.get_auth(payload)
     authCode = input(f'{email} 이메일을 확인하여 authCode 입력하세요: ')
     return authCode
 
@@ -55,9 +55,9 @@ def get_position(accessToken):
         'token': accessToken
     }
 
-    all_position_value, response, all_device_list = client.get_position(payload)
+    allPositionValue, response, allDeviceList = client.get_position(payload)
 
-    logger.info('[get_position] all_position_value : ' + str(all_position_value))
+    logger.info('[get_position] allPositionValue : ' + str(allPositionValue))
     logger.info('[get_position] response : ' + str(response))
     return response
 
@@ -71,9 +71,9 @@ def get_resource(accessToken):
         'token': accessToken
     }
 
-    model_info_value , response = client.get_resource(payload)
+    modelInfoValue , response = client.get_resource(payload)
 
-    logger.info('[get_resource] model_info_value : ' + str(model_info_value))
+    logger.info('[get_resource] modelInfoValue : ' + str(modelInfoValue))
     logger.info('[get_resource] response : ' + str(response))
     return response
 
